@@ -8,17 +8,15 @@ local I              = require('openmw.interfaces')
 local MODE           = camera.MODE
 
 local M              = {
-    enabled            = true,
-    innerDeadzone      = 0.05,
-    yawTurnSpeed       = 4.5,
-    pitchTurnSpeed     = 4.0,
-    accelerationFactor = 18,
+    enabled        = true,
+    yawTurnSpeed   = 0.5,
+    pitchTurnSpeed = 0.3,
 }
 
 local IntentBuffer   = {}
 IntentBuffer.__index = IntentBuffer
 
-function emptyBuffer(size)
+local function emptyBuffer(size)
     local values = {}
     for _ = 1, size do
         table.insert(values, 0)
@@ -44,7 +42,7 @@ function IntentBuffer:push(v)
     self.index = self.index % self.size + 1
 end
 
-function IntentBuffer:getPredicted()
+function IntentBuffer:getPredicted(accelerationFactor)
     local sum = 0
     for i = 1, self.size do
         sum = sum + self.values[i]
@@ -52,21 +50,15 @@ function IntentBuffer:getPredicted()
     local avg = sum / self.size
 
     local newest = self.values[(self.index - 2) % self.size + 1]
-    local oldest = self.values[self.index % self.size + 1]
+    local oldest = self.values[self.index]
+
     local trend = (newest - oldest) / self.size
 
-    return avg + trend * 0.5
+    return (avg + trend * accelerationFactor) / (1 + accelerationFactor)
 end
 
-local yawVelocity   = 0
-local yawBuffer     = IntentBuffer.new(4)
-local pitchVelocity = 0
-local pitchBuffer   = IntentBuffer.new(4)
-
-local function smoothVelocity(raw, target, dt, accel)
-    local k = 1 - math.exp(-accel * dt)
-    return raw + (target - raw) * k
-end
+local yawBuffer   = IntentBuffer.new(4)
+local pitchBuffer = IntentBuffer.new(4)
 
 ---Enable or disable acceleration.
 ---@param enabled boolean
@@ -74,9 +66,7 @@ function M.setEnabled(enabled)
     print("changing enable")
     if M.enabled ~= enabled then
         if enabled then
-            yawVelocity = 0
             yawBuffer:reset()
-            pitchVelocity = 0
             pitchBuffer:reset()
         end
     end
@@ -88,15 +78,11 @@ function M.onFrame(dt)
     if camera.getMode() == MODE.Static then return end
     -- Once for yaw
     yawBuffer:push(self.controls.yawChange)
-    local predictedYawIntent = yawBuffer:getPredicted()
-    yawVelocity = smoothVelocity(yawVelocity, predictedYawIntent * M.yawTurnSpeed, dt, M.accelerationFactor)
-    self.controls.yawChange = yawVelocity * dt
+    self.controls.yawChange = yawBuffer:getPredicted(M.yawTurnSpeed)
 
     -- Again for pitch
     pitchBuffer:push(self.controls.pitchChange)
-    local predictedPitchIntent = pitchBuffer:getPredicted()
-    pitchVelocity = smoothVelocity(pitchVelocity, predictedPitchIntent * M.pitchTurnSpeed, dt, M.accelerationFactor)
-    self.controls.pitchChange = pitchVelocity * dt
+    self.controls.pitchChange = pitchBuffer:getPredicted(M.pitchTurnSpeed)
 end
 
 return M
