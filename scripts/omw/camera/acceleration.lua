@@ -18,42 +18,42 @@ local M              = {
 local IntentBuffer   = {}
 IntentBuffer.__index = IntentBuffer
 
+function emptyBuffer(size)
+    local values = {}
+    for _ = 1, size do
+        table.insert(values, 0)
+    end
+    return values
+end
+
 function IntentBuffer.new(size)
     return setmetatable({
         size   = size or 4,
-        values = {},
+        values = emptyBuffer(size or 4),
         index  = 1,
-        count  = 0,
     }, IntentBuffer)
 end
 
 function IntentBuffer:reset()
     self.index = 1
-    self.count = 0
+    self.values = emptyBuffer(self.size)
 end
 
 function IntentBuffer:push(v)
     self.values[self.index] = v
     self.index = self.index % self.size + 1
-    self.count = math.min(self.count + 1, self.size)
 end
 
 function IntentBuffer:getPredicted()
-    if self.count == 0 then return 0 end
-
     local sum = 0
-    for i = 1, self.count do
+    for i = 1, self.size do
         sum = sum + self.values[i]
     end
-    local avg = sum / self.count
-
-    if self.count < 2 then
-        return avg
-    end
+    local avg = sum / self.size
 
     local newest = self.values[(self.index - 2) % self.size + 1]
     local oldest = self.values[self.index % self.size + 1]
-    local trend = (newest - oldest) / self.count
+    local trend = (newest - oldest) / self.size
 
     return avg + trend * 0.5
 end
@@ -71,6 +71,7 @@ end
 ---Enable or disable acceleration.
 ---@param enabled boolean
 function M.setEnabled(enabled)
+    print("changing enable")
     if M.enabled ~= enabled then
         if enabled then
             yawVelocity = 0
@@ -84,22 +85,14 @@ end
 
 function M.onFrame(dt)
     if (not M.enabled) or core.isWorldPaused() then return end
-
     if camera.getMode() == MODE.Static then return end
-
     -- Once for yaw
-    if math.abs(self.controls.yawChange) < M.innerDeadzone then
-        self.controls.yawChange = 0
-    end
     yawBuffer:push(self.controls.yawChange)
     local predictedYawIntent = yawBuffer:getPredicted()
     yawVelocity = smoothVelocity(yawVelocity, predictedYawIntent * M.yawTurnSpeed, dt, M.accelerationFactor)
     self.controls.yawChange = yawVelocity * dt
 
     -- Again for pitch
-    if math.abs(self.controls.pitchChange) < M.innerDeadzone then
-        self.controls.pitchChange = 0
-    end
     pitchBuffer:push(self.controls.pitchChange)
     local predictedPitchIntent = pitchBuffer:getPredicted()
     pitchVelocity = smoothVelocity(pitchVelocity, predictedPitchIntent * M.pitchTurnSpeed, dt, M.accelerationFactor)
