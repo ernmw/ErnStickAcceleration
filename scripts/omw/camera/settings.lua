@@ -50,6 +50,7 @@ I.Settings.registerGroup({
         boolSetting('', 'ignoreNC', false),
         boolSetting('', 'move360', false),
         floatSetting('', 'move360TurnSpeed', 5),
+        boolSetting('', 'acceleration', false),
         boolSetting('', 'slowViewChange', false),
         boolSetting('', 'povAutoSwitch', false),
     },

@@ -35,6 +35,7 @@ local head_bobbing = require('scripts.omw.camera.head_bobbing')
 local third_person = require('scripts.omw.camera.third_person')
 local pov_auto_switch = require('scripts.omw.camera.first_person_auto_switch')
 local move360 = require('scripts.omw.camera.move360')
+local acceleration = require('scripts.omw.camera.acceleration')
 
 local MODE = camera.MODE
 
@@ -54,6 +55,7 @@ local function updateSettings()
     camera.setCollisionType(collisionType)
     move360.enabled = settings:get('move360')
     move360.turnSpeed = settings:get('move360TurnSpeed')
+    acceleration.setEnabled(settings:get('cameraAcceleration'))
     pov_auto_switch.enabled = settings:get('povAutoSwitch')
     slowViewChange = settings:get('slowViewChange')
 end
