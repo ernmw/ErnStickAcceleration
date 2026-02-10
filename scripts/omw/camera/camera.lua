@@ -55,7 +55,6 @@ local function updateSettings()
     camera.setCollisionType(collisionType)
     move360.enabled = settings:get('move360')
     move360.turnSpeed = settings:get('move360TurnSpeed')
-    acceleration.setEnabled(settings:get('acceleration'))
     pov_auto_switch.enabled = settings:get('povAutoSwitch')
     slowViewChange = settings:get('slowViewChange')
 end

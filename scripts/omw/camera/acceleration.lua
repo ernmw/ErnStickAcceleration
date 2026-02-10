@@ -3,14 +3,19 @@ local camera         = require('openmw.camera')
 local input          = require('openmw.input')
 local self           = require('openmw.self')
 local util           = require('openmw.util')
+local async          = require('openmw.async')
 local I              = require('openmw.interfaces')
+local storage        = require('openmw.storage')
 
 local MODE           = camera.MODE
 
+local settings       = storage.playerSection('SettingsOMWCameraAcceleration')
+
 local M              = {
     enabled        = true,
-    yawTurnSpeed   = 0.5,
-    pitchTurnSpeed = 0.3,
+    yawTurnSpeed   = 1,
+    pitchTurnSpeed = 0.8,
+    sensitivity    = 2.5
 }
 
 local IntentBuffer   = {}
@@ -52,20 +57,22 @@ function IntentBuffer:getPredicted(accelerationFactor)
     local newest = self.values[(self.index - 2) % self.size + 1]
     local oldest = self.values[self.index]
 
-    local trend = (newest - oldest) / self.size
+    if math.abs(newest) < math.abs(oldest) then
+        return avg
+    end
 
-    return (avg + trend * accelerationFactor) / (1 + accelerationFactor)
+    local delta = newest - oldest
+    return avg + delta * accelerationFactor
 end
 
 local yawBuffer   = IntentBuffer.new(4)
 local pitchBuffer = IntentBuffer.new(4)
 
----Enable or disable acceleration.
 ---@param enabled boolean
-function M.setEnabled(enabled)
-    print("changing enable")
+local function setEnabled(enabled)
     if M.enabled ~= enabled then
         if enabled then
+            print("enabled!")
             yawBuffer:reset()
             pitchBuffer:reset()
         end
@@ -73,16 +80,23 @@ function M.setEnabled(enabled)
     M.enabled = enabled
 end
 
+local function updateSettings()
+    setEnabled(settings:get('enabled'))
+    M.sensitivity = settings:get('sensitivity')
+end
+
+updateSettings()
+settings:subscribe(async:callback(updateSettings))
+
 function M.onFrame(dt)
     if (not M.enabled) or core.isWorldPaused() then return end
     if camera.getMode() == MODE.Static then return end
-    -- Once for yaw
-    yawBuffer:push(self.controls.yawChange)
-    self.controls.yawChange = yawBuffer:getPredicted(M.yawTurnSpeed)
 
-    -- Again for pitch
+    yawBuffer:push(self.controls.yawChange)
+    self.controls.yawChange = yawBuffer:getPredicted(M.yawTurnSpeed * M.sensitivity)
+
     pitchBuffer:push(self.controls.pitchChange)
-    self.controls.pitchChange = pitchBuffer:getPredicted(M.pitchTurnSpeed)
+    self.controls.pitchChange = pitchBuffer:getPredicted(M.pitchTurnSpeed * M.sensitivity)
 end
 
 return M

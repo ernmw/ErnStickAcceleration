@@ -49,10 +49,6 @@ move360Description: >
 move360TurnSpeed: "Move 360 Turning Speed"
 move360TurnSpeedDescription: "Turning speed multiplier (default: 5.0)."
 
-acceleration: "Acceleration"
-accelerationDescription: >
-  Moves the camera based on acceleration of the analog input rather than the linear value of the analog input.
-
 slowViewChange: "Smooth View Change"
 slowViewChangeDescription: "Makes the transition from 1st person to 3rd person view non-instantaneous."
 
@@ -72,3 +68,13 @@ headBobbing_heightDescription: "The amplitude of the head bobbing (default: 3.0)
 
 headBobbing_roll: "Max Roll Angle"
 headBobbing_rollDescription: "The maximum roll angle in degrees (default: 0.2)."
+
+accelerationSettings: "Acceleration"
+
+acceleration_enabled: "Enabled"
+acceleration_enabledDescription: >
+  Moves the camera based on acceleration of the analog input rather than the linear value of the analog input.
+
+acceleration_sensitivity: "Acceleration Sensitivity"
+acceleration_sensitivityDescription: >
+  The extra camera movement to apply per-frame based on input acceleration.

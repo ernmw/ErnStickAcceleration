@@ -11,6 +11,7 @@ I.Settings.registerPage({
 
 local thirdPersonGroup = 'SettingsOMWCameraThirdPerson'
 local headBobbingGroup = 'SettingsOMWCameraHeadBobbing'
+local accelerationGroup = 'SettingsOMWCameraAcceleration'
 
 local function boolSetting(prefix, key, default)
     return {
@@ -50,7 +51,6 @@ I.Settings.registerGroup({
         boolSetting('', 'ignoreNC', false),
         boolSetting('', 'move360', false),
         floatSetting('', 'move360TurnSpeed', 5),
-        boolSetting('', 'acceleration', false),
         boolSetting('', 'slowViewChange', false),
         boolSetting('', 'povAutoSwitch', false),
     },
@@ -71,8 +71,22 @@ I.Settings.registerGroup({
     },
 })
 
+I.Settings.registerGroup({
+    key = accelerationGroup,
+    page = 'OMWCamera',
+    l10n = 'OMWCamera',
+    name = 'accelerationSettings',
+    permanentStorage = true,
+    order = 2,
+    settings = {
+        boolSetting('acceleration_', 'enabled', false),
+        floatSetting('acceleration_', 'sensitivity', 2.5),
+    },
+})
+
 local thirdPerson = storage.playerSection(thirdPersonGroup)
 local headBobbing = storage.playerSection(headBobbingGroup)
+local acceleration = storage.playerSection(accelerationGroup)
 
 local function updateViewOverShoulderDisabled()
     local shoulderDisabled = not thirdPerson:get('viewOverShoulder')
@@ -92,8 +106,15 @@ local function updateHeadBobbingDisabled()
     I.Settings.updateRendererArgument(headBobbingGroup, 'roll', { disabled = disabled, min = 0, max = 90 })
 end
 
+local function updateAccelerationDisabled()
+    local disabled = not acceleration:get('enabled')
+    I.Settings.updateRendererArgument(accelerationGroup, 'sensitivity', { disabled = disabled })
+end
+
 updateViewOverShoulderDisabled()
 updateHeadBobbingDisabled()
+updateAccelerationDisabled()
 
 thirdPerson:subscribe(async:callback(updateViewOverShoulderDisabled))
 headBobbing:subscribe(async:callback(updateHeadBobbingDisabled))
+acceleration:subscribe(async:callback(updateAccelerationDisabled))
