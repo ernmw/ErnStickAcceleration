@@ -12,9 +12,10 @@ local MODE           = camera.MODE
 local settings       = storage.playerSection('SettingsOMWCameraAcceleration')
 
 local M              = {
-    enabled          = true,
-    yawSensitivity   = 12,
-    pitchSensitivity = 6,
+    enabled           = true,
+    sensitivity       = 7,
+    edgeBonusSpeed    = 1,
+    edgeBonusDeadzone = 0.7,
 }
 
 local IntentBuffer   = {}
@@ -46,24 +47,6 @@ function IntentBuffer:push(v)
     self.index = self.index % self.size + 1
 end
 
-function IntentBuffer:getPredicted(accelerationFactor)
-    local sum = 0
-    for i = 1, self.size do
-        sum = sum + self.values[i]
-    end
-    local avg = sum / self.size
-
-    local newest = self.values[(self.index - 2) % self.size + 1]
-    local oldest = self.values[self.index]
-
-    if math.abs(newest) < math.abs(oldest) then
-        return avg
-    end
-
-    local delta = newest - oldest
-    return avg + delta * accelerationFactor
-end
-
 function IntentBuffer:getVelocity()
     local newest = self.values[(self.index - 2) % self.size + 1]
     local oldest = self.values[self.index]
@@ -90,12 +73,22 @@ end
 
 local function updateSettings()
     setEnabled(settings:get('enabled'))
-    M.yawSensitivity = settings:get('yawSensitivity')
-    M.pitchSensitivity = settings:get('pitchSensitivity')
+    M.sensitivity = settings:get('sensitivity')
+    M.edgeBonusSpeed = settings:get('edgeBonusSpeed')
 end
 
 updateSettings()
 settings:subscribe(async:callback(updateSettings))
+
+local function bonusSpeed(inputValue)
+    if inputValue > M.edgeBonusDeadzone then
+        return M.edgeBonusSpeed
+    elseif inputValue < -1 * M.edgeBonusDeadzone then
+        return -1 * M.edgeBonusSpeed
+    else
+        return 0
+    end
+end
 
 local retainedYawVelocity = 0
 local retainedPitchVelocity = 0
@@ -108,6 +101,7 @@ function M.onFrame(dt)
 
     local normalizedDistanceFromOrigin = math.sqrt(yawInput * yawInput + pitchInput * pitchInput)
     local accelFactor = normalizedDistanceFromOrigin * normalizedDistanceFromOrigin
+    local edgeBonusFactor = util.remap(accelFactor, 0, 1, M.edgeBonusDeadzone, 1)
 
     yawBuffer:push(yawInput)
     local currentYawVelocity = yawBuffer:getVelocity()
@@ -115,7 +109,8 @@ function M.onFrame(dt)
     retainedYawVelocity = retainedYawVelocity * math.abs(yawInput) +
         currentYawVelocity * (1 - math.abs(yawInput))
     self.controls.yawChange = self.controls.yawChange +
-        accelFactor * retainedYawVelocity * M.yawSensitivity * dt
+        accelFactor * retainedYawVelocity * M.sensitivity * dt +
+        edgeBonusFactor * bonusSpeed(yawInput) * dt
 
     pitchBuffer:push(pitchInput)
     local currentPitchVelocity = pitchBuffer:getVelocity()
@@ -123,7 +118,8 @@ function M.onFrame(dt)
     retainedPitchVelocity = retainedPitchVelocity * math.abs(pitchInput) +
         currentPitchVelocity * (1 - math.abs(pitchInput))
     self.controls.pitchChange = self.controls.pitchChange +
-        accelFactor * retainedPitchVelocity * M.pitchSensitivity * dt
+        accelFactor * retainedPitchVelocity * M.sensitivity * dt +
+        edgeBonusFactor * bonusSpeed(pitchInput) * dt
 end
 
 return M

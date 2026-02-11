@@ -72,9 +72,12 @@ headBobbing_rollDescription: "The maximum roll angle in degrees (default: 0.2)."
 accelerationSettings: "Joystick Acceleration"
 
 acceleration_enabled: "Enabled"
-acceleration_enabledDescription: >
-  Moves the camera based on acceleration of the analog input rather than the linear value of the analog input.
+acceleration_enabledDescription: ""
 
-acceleration_sensitivity: "Acceleration Sensitivity"
+acceleration_sensitivity: "Flick Sensitivity"
 acceleration_sensitivityDescription: >
-  The extra camera movement to apply per-frame based on input acceleration.
+  Extra camera movement to apply per-frame based on input acceleration.
+
+acceleration_edgeBonusSpeed: "Edge Sensitiviy"
+acceleration_edgeBonusSpeedDescription: >
+  Extra camera movement to apply per-frame as the analog input approaches the limit of its travel.
