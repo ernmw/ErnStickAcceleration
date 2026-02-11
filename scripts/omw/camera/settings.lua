@@ -80,7 +80,7 @@ I.Settings.registerGroup({
     order = 2,
     settings = {
         boolSetting('acceleration_', 'enabled', false),
-        floatSetting('acceleration_', 'yawSensitivity', 12.0),
+        floatSetting('acceleration_', 'yawSensitivity', 12),
         floatSetting('acceleration_', 'pitchSensitivity', 6),
     },
 })

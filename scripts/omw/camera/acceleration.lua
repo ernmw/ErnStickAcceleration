@@ -13,8 +13,8 @@ local settings       = storage.playerSection('SettingsOMWCameraAcceleration')
 
 local M              = {
     enabled          = true,
-    yawSensitivity   = 0.2,
-    pitchSensitivity = 0.1,
+    yawSensitivity   = 12,
+    pitchSensitivity = 6,
 }
 
 local IntentBuffer   = {}
@@ -104,26 +104,26 @@ function M.onFrame(dt)
     if camera.getMode() == MODE.Static then return end
 
     local yawInput = input.getAxisValue(input.CONTROLLER_AXIS.LookLeftRight)
-    local absYaw = math.abs(yawInput)
-    local normalizedYaw = util.clamp(absYaw, 0, 1)
-    local yawAccelFactor = normalizedYaw * normalizedYaw
+    local pitchInput = input.getAxisValue(input.CONTROLLER_AXIS.LookUpDown)
+
+    local normalizedDistanceFromOrigin = util.clamp(math.sqrt(yawInput * yawInput + pitchInput * pitchInput), 0, 1)
+    local accelFactor = normalizedDistanceFromOrigin * normalizedDistanceFromOrigin
+
     yawBuffer:push(yawInput)
     local currentYawVelocity = yawBuffer:getVelocity()
     -- retain yaw longer the closer we are to the edge of input
-    retainedYawVelocity = retainedYawVelocity * normalizedYaw + currentYawVelocity * (1 - normalizedYaw)
+    retainedYawVelocity = retainedYawVelocity * normalizedDistanceFromOrigin +
+        currentYawVelocity * (1 - normalizedDistanceFromOrigin)
     self.controls.yawChange = self.controls.yawChange +
-        yawAccelFactor * retainedYawVelocity * M.yawSensitivity * dt
+        accelFactor * retainedYawVelocity * M.yawSensitivity * dt
 
-    local pitchInput = input.getAxisValue(input.CONTROLLER_AXIS.LookUpDown)
-    local absPitch = math.abs(pitchInput)
-    local normalizedPitch = util.clamp(absPitch, 0, 1)
-    local pitchAccelFactor = normalizedPitch * normalizedPitch
     pitchBuffer:push(pitchInput)
     local currentPitchVelocity = pitchBuffer:getVelocity()
     -- retain pitch longer the closer we are to the edge of input
-    retainedPitchVelocity = retainedPitchVelocity * normalizedPitch + currentPitchVelocity * (1 - normalizedPitch)
+    retainedPitchVelocity = retainedPitchVelocity * normalizedDistanceFromOrigin +
+        currentPitchVelocity * (1 - normalizedDistanceFromOrigin)
     self.controls.pitchChange = self.controls.pitchChange +
-        pitchAccelFactor * retainedPitchVelocity * M.pitchSensitivity * dt
+        accelFactor * retainedPitchVelocity * M.pitchSensitivity * dt
 end
 
 return M
