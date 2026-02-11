@@ -69,7 +69,7 @@ headBobbing_heightDescription: "The amplitude of the head bobbing (default: 3.0)
 headBobbing_roll: "Max Roll Angle"
 headBobbing_rollDescription: "The maximum roll angle in degrees (default: 0.2)."
 
-accelerationSettings: "Acceleration"
+accelerationSettings: "Joystick Acceleration"
 
 acceleration_enabled: "Enabled"
 acceleration_enabledDescription: >

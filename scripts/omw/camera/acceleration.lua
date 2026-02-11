@@ -12,10 +12,9 @@ local MODE           = camera.MODE
 local settings       = storage.playerSection('SettingsOMWCameraAcceleration')
 
 local M              = {
-    enabled        = true,
-    yawTurnSpeed   = 1,
-    pitchTurnSpeed = 0.8,
-    sensitivity    = 2.5
+    enabled          = true,
+    yawSensitivity   = 0.2,
+    pitchSensitivity = 0.1,
 }
 
 local IntentBuffer   = {}
@@ -65,6 +64,15 @@ function IntentBuffer:getPredicted(accelerationFactor)
     return avg + delta * accelerationFactor
 end
 
+function IntentBuffer:getVelocity()
+    local newest = self.values[(self.index - 2) % self.size + 1]
+    local oldest = self.values[self.index]
+    if math.abs(newest) < math.abs(oldest) then
+        return 0
+    end
+    return newest - oldest
+end
+
 local yawBuffer   = IntentBuffer.new(4)
 local pitchBuffer = IntentBuffer.new(4)
 
@@ -82,21 +90,40 @@ end
 
 local function updateSettings()
     setEnabled(settings:get('enabled'))
-    M.sensitivity = settings:get('sensitivity')
+    M.yawSensitivity = settings:get('yawSensitivity')
+    M.pitchSensitivity = settings:get('pitchSensitivity')
 end
 
 updateSettings()
 settings:subscribe(async:callback(updateSettings))
 
+local retainedYawVelocity = 0
+local retainedPitchVelocity = 0
 function M.onFrame(dt)
     if (not M.enabled) or core.isWorldPaused() then return end
     if camera.getMode() == MODE.Static then return end
 
-    yawBuffer:push(self.controls.yawChange)
-    self.controls.yawChange = yawBuffer:getPredicted(M.yawTurnSpeed * M.sensitivity)
+    local yawInput = input.getAxisValue(input.CONTROLLER_AXIS.LookLeftRight)
+    local absYaw = math.abs(yawInput)
+    local normalizedYaw = util.clamp(absYaw, 0, 1)
+    local yawAccelFactor = normalizedYaw * normalizedYaw
+    yawBuffer:push(yawInput)
+    local currentYawVelocity = yawBuffer:getVelocity()
+    -- retain yaw longer the closer we are to the edge of input
+    retainedYawVelocity = retainedYawVelocity * normalizedYaw + currentYawVelocity * (1 - normalizedYaw)
+    self.controls.yawChange = self.controls.yawChange +
+        yawAccelFactor * retainedYawVelocity * M.yawSensitivity * dt
 
-    pitchBuffer:push(self.controls.pitchChange)
-    self.controls.pitchChange = pitchBuffer:getPredicted(M.pitchTurnSpeed * M.sensitivity)
+    local pitchInput = input.getAxisValue(input.CONTROLLER_AXIS.LookUpDown)
+    local absPitch = math.abs(pitchInput)
+    local normalizedPitch = util.clamp(absPitch, 0, 1)
+    local pitchAccelFactor = normalizedPitch * normalizedPitch
+    pitchBuffer:push(pitchInput)
+    local currentPitchVelocity = pitchBuffer:getVelocity()
+    -- retain pitch longer the closer we are to the edge of input
+    retainedPitchVelocity = retainedPitchVelocity * normalizedPitch + currentPitchVelocity * (1 - normalizedPitch)
+    self.controls.pitchChange = self.controls.pitchChange +
+        pitchAccelFactor * retainedPitchVelocity * M.pitchSensitivity * dt
 end
 
 return M

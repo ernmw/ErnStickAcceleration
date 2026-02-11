@@ -80,7 +80,8 @@ I.Settings.registerGroup({
     order = 2,
     settings = {
         boolSetting('acceleration_', 'enabled', false),
-        floatSetting('acceleration_', 'sensitivity', 2.5),
+        floatSetting('acceleration_', 'yawSensitivity', 12.0),
+        floatSetting('acceleration_', 'pitchSensitivity', 6),
     },
 })
 
@@ -108,7 +109,8 @@ end
 
 local function updateAccelerationDisabled()
     local disabled = not acceleration:get('enabled')
-    I.Settings.updateRendererArgument(accelerationGroup, 'sensitivity', { disabled = disabled })
+    I.Settings.updateRendererArgument(accelerationGroup, 'yawSensitivity', { disabled = disabled })
+    I.Settings.updateRendererArgument(accelerationGroup, 'pitchSensitivity', { disabled = disabled })
 end
 
 updateViewOverShoulderDisabled()
