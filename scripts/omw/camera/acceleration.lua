@@ -103,25 +103,25 @@ function M.onFrame(dt)
     if (not M.enabled) or core.isWorldPaused() then return end
     if camera.getMode() == MODE.Static then return end
 
-    local yawInput = input.getAxisValue(input.CONTROLLER_AXIS.LookLeftRight)
-    local pitchInput = input.getAxisValue(input.CONTROLLER_AXIS.LookUpDown)
+    local yawInput = util.clamp(input.getAxisValue(input.CONTROLLER_AXIS.LookLeftRight), -1, 1)
+    local pitchInput = util.clamp(input.getAxisValue(input.CONTROLLER_AXIS.LookUpDown), -1, 1)
 
-    local normalizedDistanceFromOrigin = util.clamp(math.sqrt(yawInput * yawInput + pitchInput * pitchInput), 0, 1)
+    local normalizedDistanceFromOrigin = math.sqrt(yawInput * yawInput + pitchInput * pitchInput)
     local accelFactor = normalizedDistanceFromOrigin * normalizedDistanceFromOrigin
 
     yawBuffer:push(yawInput)
     local currentYawVelocity = yawBuffer:getVelocity()
     -- retain yaw longer the closer we are to the edge of input
-    retainedYawVelocity = retainedYawVelocity * normalizedDistanceFromOrigin +
-        currentYawVelocity * (1 - normalizedDistanceFromOrigin)
+    retainedYawVelocity = retainedYawVelocity * math.abs(yawInput) +
+        currentYawVelocity * (1 - math.abs(yawInput))
     self.controls.yawChange = self.controls.yawChange +
         accelFactor * retainedYawVelocity * M.yawSensitivity * dt
 
     pitchBuffer:push(pitchInput)
     local currentPitchVelocity = pitchBuffer:getVelocity()
     -- retain pitch longer the closer we are to the edge of input
-    retainedPitchVelocity = retainedPitchVelocity * normalizedDistanceFromOrigin +
-        currentPitchVelocity * (1 - normalizedDistanceFromOrigin)
+    retainedPitchVelocity = retainedPitchVelocity * math.abs(pitchInput) +
+        currentPitchVelocity * (1 - math.abs(pitchInput))
     self.controls.pitchChange = self.controls.pitchChange +
         accelFactor * retainedPitchVelocity * M.pitchSensitivity * dt
 end
