@@ -92,15 +92,13 @@ function M.onFrame(dt)
     local edgeBonusFactor = util.remap(accelFactor, 0, 1, M.edgeBonusDeadzone, 1)
 
     yawBuffer:push(yawInput)
-    local currentYawVelocity = yawBuffer:getVelocity()
     self.controls.yawChange = self.controls.yawChange +
-        accelFactor * currentYawVelocity * M.sensitivity * dt +
+        accelFactor * yawBuffer:getVelocity() * M.sensitivity * dt +
         edgeBonusFactor * bonusSpeed(yawInput) * dt
 
     pitchBuffer:push(pitchInput)
-    local currentPitchVelocity = pitchBuffer:getVelocity()
     self.controls.pitchChange = self.controls.pitchChange +
-        accelFactor * currentPitchVelocity * M.sensitivity * dt +
+        accelFactor * pitchBuffer:getVelocity() * M.sensitivity * dt +
         edgeBonusFactor * bonusSpeed(pitchInput) * dt
 end
 
