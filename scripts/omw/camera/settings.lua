@@ -80,8 +80,9 @@ I.Settings.registerGroup({
     order = 2,
     settings = {
         boolSetting('acceleration_', 'enabled', false),
-        floatSetting('acceleration_', 'sensitivity', 7),
-        floatSetting('acceleration_', 'edgeBonusSpeed', 1),
+        floatSetting('acceleration_', 'sensitivity', 4),
+        floatSetting('acceleration_', 'memory', 6),
+        floatSetting('acceleration_', 'edgeBonusSpeed', 2),
     },
 })
 
@@ -110,6 +111,7 @@ end
 local function updateAccelerationDisabled()
     local disabled = not acceleration:get('enabled')
     I.Settings.updateRendererArgument(accelerationGroup, 'sensitivity', { disabled = disabled })
+    I.Settings.updateRendererArgument(accelerationGroup, 'memory', { disabled = disabled })
     I.Settings.updateRendererArgument(accelerationGroup, 'edgeBonusSpeed', { disabled = disabled })
 end
 

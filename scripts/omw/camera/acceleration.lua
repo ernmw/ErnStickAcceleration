@@ -13,9 +13,10 @@ local settings       = storage.playerSection('SettingsOMWCameraAcceleration')
 
 local M              = {
     enabled           = true,
-    sensitivity       = 7,
-    edgeBonusSpeed    = 1,
+    sensitivity       = 4,
+    edgeBonusSpeed    = 2,
     edgeBonusDeadzone = 0.7,
+    lag               = 6,
 }
 
 local IntentBuffer   = {}
@@ -29,10 +30,10 @@ local function emptyBuffer(size)
     return values
 end
 
-function IntentBuffer.new(size)
+function IntentBuffer.new()
     return setmetatable({
-        size   = size or 4,
-        values = emptyBuffer(size or 4),
+        size   = M.lag,
+        values = emptyBuffer(M.lag),
         index  = 1,
     }, IntentBuffer)
 end
@@ -50,31 +51,20 @@ end
 function IntentBuffer:getVelocity()
     local newest = self.values[(self.index - 2) % self.size + 1]
     local oldest = self.values[self.index]
-    if math.abs(newest) < math.abs(oldest) then
-        return 0
-    end
     return newest - oldest
 end
 
-local yawBuffer   = IntentBuffer.new(4)
-local pitchBuffer = IntentBuffer.new(4)
-
----@param enabled boolean
-local function setEnabled(enabled)
-    if M.enabled ~= enabled then
-        if enabled then
-            print("enabled!")
-            yawBuffer:reset()
-            pitchBuffer:reset()
-        end
-    end
-    M.enabled = enabled
-end
+local yawBuffer   = IntentBuffer.new()
+local pitchBuffer = IntentBuffer.new()
 
 local function updateSettings()
-    setEnabled(settings:get('enabled'))
-    M.sensitivity = settings:get('sensitivity')
+    M.enabled        = settings:get('enabled')
+    M.lag            = settings:get('memory')
+    M.sensitivity    = settings:get('sensitivity')
     M.edgeBonusSpeed = settings:get('edgeBonusSpeed')
+
+    yawBuffer        = IntentBuffer.new()
+    pitchBuffer      = IntentBuffer.new()
 end
 
 updateSettings()
@@ -90,8 +80,6 @@ local function bonusSpeed(inputValue)
     end
 end
 
-local retainedYawVelocity = 0
-local retainedPitchVelocity = 0
 function M.onFrame(dt)
     if (not M.enabled) or core.isWorldPaused() then return end
     if camera.getMode() == MODE.Static then return end
@@ -105,20 +93,14 @@ function M.onFrame(dt)
 
     yawBuffer:push(yawInput)
     local currentYawVelocity = yawBuffer:getVelocity()
-    -- retain yaw longer the closer we are to the edge of input
-    retainedYawVelocity = retainedYawVelocity * math.abs(yawInput) +
-        currentYawVelocity * (1 - math.abs(yawInput))
     self.controls.yawChange = self.controls.yawChange +
-        accelFactor * retainedYawVelocity * M.sensitivity * dt +
+        accelFactor * currentYawVelocity * M.sensitivity * dt +
         edgeBonusFactor * bonusSpeed(yawInput) * dt
 
     pitchBuffer:push(pitchInput)
     local currentPitchVelocity = pitchBuffer:getVelocity()
-    -- retain pitch longer the closer we are to the edge of input
-    retainedPitchVelocity = retainedPitchVelocity * math.abs(pitchInput) +
-        currentPitchVelocity * (1 - math.abs(pitchInput))
     self.controls.pitchChange = self.controls.pitchChange +
-        accelFactor * retainedPitchVelocity * M.sensitivity * dt +
+        accelFactor * currentPitchVelocity * M.sensitivity * dt +
         edgeBonusFactor * bonusSpeed(pitchInput) * dt
 end
 

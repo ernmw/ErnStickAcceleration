@@ -78,6 +78,10 @@ acceleration_sensitivity: "Flick Sensitivity"
 acceleration_sensitivityDescription: >
   Extra camera movement to apply per-frame based on input acceleration.
 
+acceleration_memory: "Flick Memory"
+acceleration_memoryDescription: >
+  The number of frames to consider when determining flick acceleration.
+
 acceleration_edgeBonusSpeed: "Edge Sensitiviy"
 acceleration_edgeBonusSpeedDescription: >
   Extra camera movement to apply per-frame as the analog input approaches the limit of its travel.
