@@ -47,7 +47,7 @@ function M.onFrame(dt)
 
     local newInputLength = M.sensitivity * (
         (remappedDistance * remappedDistance * remappedDistance) * M.cubicWeight +
-        remappedDistance * (M.cubicWeight - 1)
+        remappedDistance * (1 - M.cubicWeight)
     )
 
     -- normalize each input, then scale by new length
