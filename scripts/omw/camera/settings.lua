@@ -30,8 +30,7 @@ local function floatSetting(prefix, key, default, min, max)
         name = prefix .. key,
         description = prefix .. key .. 'Description',
         default = default,
-        min = min,
-        max = max
+        argument = { integer = false, min = min, max = max }
     }
 end
 
@@ -83,8 +82,8 @@ I.Settings.registerGroup({
     settings = {
         boolSetting('curve_', 'enabled', false),
         floatSetting('curve_', 'innerDeadzone', 0.05, 0, 1),
-        floatSetting('curve_', 'cubicWeight', 0.9, 0, 1),
-        floatSetting('curve_', 'sensitivity', 1.4, 0, 2),
+        floatSetting('curve_', 'cubicWeight', 0.5, 0, 1),
+        floatSetting('curve_', 'sensitivity', 2.2, 0, 5),
     },
 })
 

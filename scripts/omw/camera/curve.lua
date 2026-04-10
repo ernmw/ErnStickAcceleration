@@ -20,9 +20,9 @@ local M        = {
 
 local function updateSettings()
     M.enabled       = settings:get('enabled')
-    M.innerDeadzone = settings:get('innerDeadzone')
-    M.cubicWeight   = settings:get('cubicWeight')
-    M.sensitivity   = settings:get('sensitivity')
+    M.innerDeadzone = util.clamp(settings:get('innerDeadzone'), 0, 1)
+    M.cubicWeight   = util.clamp(settings:get('cubicWeight'), 0, 1)
+    M.sensitivity   = util.clamp(settings:get('sensitivity'), 0, 5)
 end
 
 updateSettings()
@@ -35,7 +35,14 @@ function M.onFrame(dt)
     local yawInput = util.clamp(input.getAxisValue(input.CONTROLLER_AXIS.LookLeftRight), -1, 1)
     local pitchInput = util.clamp(input.getAxisValue(input.CONTROLLER_AXIS.LookUpDown), -1, 1)
 
+    local actualControlsDistanceFromOrigin = math.sqrt(self.controls.yawChange * self.controls.yawChange +
+        self.controls.pitchChange * self.controls.pitchChange)
     local normalizedDistanceFromOrigin = math.sqrt(yawInput * yawInput + pitchInput * pitchInput)
+
+    if actualControlsDistanceFromOrigin > normalizedDistanceFromOrigin then
+        -- Player is using the mouse to move the camera.
+        return
+    end
 
     if normalizedDistanceFromOrigin < M.innerDeadzone then
         self.controls.yawChange = 0
