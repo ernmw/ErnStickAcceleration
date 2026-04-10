@@ -69,19 +69,19 @@ headBobbing_heightDescription: "The amplitude of the head bobbing (default: 3.0)
 headBobbing_roll: "Max Roll Angle"
 headBobbing_rollDescription: "The maximum roll angle in degrees (default: 0.2)."
 
-accelerationSettings: "Joystick Acceleration"
+curveSettings: "Joystick Curve Acceleration"
 
-acceleration_enabled: "Enabled"
-acceleration_enabledDescription: ""
+curve_enabled: "Enabled"
+curve_enabledDescription: ""
 
-acceleration_sensitivity: "Flick Sensitivity"
-acceleration_sensitivityDescription: >
-  Extra camera movement to apply per-frame based on input acceleration.
+curve_innerDeadzone: "Inner Deadzone Size"
+curve_innerDeadzoneDescription: >
+  Size of the inner deadzone, expressed as a ratio of the total stick movement area.
 
-acceleration_memory: "Flick Memory"
-acceleration_memoryDescription: >
-  The number of frames to consider when determining flick acceleration.
+curve_cubicWeight: "Cubic Weight"
+curve_cubicWeightDescription: >
+  Set this to 1 to use a cubic ease-in curve, or 0 to use linear. Or, put it somewhere in the middle to mix them.
 
-acceleration_edgeBonusSpeed: "Edge Sensitiviy"
-acceleration_edgeBonusSpeedDescription: >
-  Extra camera movement to apply per-frame as the analog input approaches the limit of its travel.
+curve_sensitivity: "Sensitivity"
+curve_sensitivityDescription: >
+  Scale joystick movement by this factor. This is applied after deadzone and cubic easing.

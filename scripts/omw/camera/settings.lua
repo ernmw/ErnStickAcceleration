@@ -11,7 +11,7 @@ I.Settings.registerPage({
 
 local thirdPersonGroup = 'SettingsOMWCameraThirdPerson'
 local headBobbingGroup = 'SettingsOMWCameraHeadBobbing'
-local accelerationGroup = 'SettingsOMWCameraAcceleration'
+local curveGroup = 'SettingsOMWCameraCurve'
 
 local function boolSetting(prefix, key, default)
     return {
@@ -23,13 +23,15 @@ local function boolSetting(prefix, key, default)
     }
 end
 
-local function floatSetting(prefix, key, default)
+local function floatSetting(prefix, key, default, min, max)
     return {
         key = key,
         renderer = 'number',
         name = prefix .. key,
         description = prefix .. key .. 'Description',
         default = default,
+        min = min,
+        max = max
     }
 end
 
@@ -72,23 +74,23 @@ I.Settings.registerGroup({
 })
 
 I.Settings.registerGroup({
-    key = accelerationGroup,
+    key = curveGroup,
     page = 'OMWCamera',
     l10n = 'OMWCamera',
-    name = 'accelerationSettings',
+    name = 'curveSettings',
     permanentStorage = true,
     order = 2,
     settings = {
-        boolSetting('acceleration_', 'enabled', false),
-        floatSetting('acceleration_', 'sensitivity', 4),
-        floatSetting('acceleration_', 'memory', 6),
-        floatSetting('acceleration_', 'edgeBonusSpeed', 2),
+        boolSetting('curve_', 'enabled', false),
+        floatSetting('curve_', 'innerDeadzone', 0.05, 0, 1),
+        floatSetting('curve_', 'cubicWeight', 0.9, 0, 1),
+        floatSetting('curve_', 'sensitivity', 1.4, 0, 2),
     },
 })
 
 local thirdPerson = storage.playerSection(thirdPersonGroup)
 local headBobbing = storage.playerSection(headBobbingGroup)
-local acceleration = storage.playerSection(accelerationGroup)
+local curve = storage.playerSection(curveGroup)
 
 local function updateViewOverShoulderDisabled()
     local shoulderDisabled = not thirdPerson:get('viewOverShoulder')
@@ -108,17 +110,17 @@ local function updateHeadBobbingDisabled()
     I.Settings.updateRendererArgument(headBobbingGroup, 'roll', { disabled = disabled, min = 0, max = 90 })
 end
 
-local function updateAccelerationDisabled()
-    local disabled = not acceleration:get('enabled')
-    I.Settings.updateRendererArgument(accelerationGroup, 'sensitivity', { disabled = disabled })
-    I.Settings.updateRendererArgument(accelerationGroup, 'memory', { disabled = disabled })
-    I.Settings.updateRendererArgument(accelerationGroup, 'edgeBonusSpeed', { disabled = disabled })
+local function updateCurveDisabled()
+    local disabled = not curve:get('enabled')
+    I.Settings.updateRendererArgument(curveGroup, 'innerDeadzone', { disabled = disabled })
+    I.Settings.updateRendererArgument(curveGroup, 'cubicWeight', { disabled = disabled })
+    I.Settings.updateRendererArgument(curveGroup, 'sensitivity', { disabled = disabled })
 end
 
 updateViewOverShoulderDisabled()
 updateHeadBobbingDisabled()
-updateAccelerationDisabled()
+updateCurveDisabled()
 
 thirdPerson:subscribe(async:callback(updateViewOverShoulderDisabled))
 headBobbing:subscribe(async:callback(updateHeadBobbingDisabled))
-acceleration:subscribe(async:callback(updateAccelerationDisabled))
+curve:subscribe(async:callback(updateCurveDisabled))

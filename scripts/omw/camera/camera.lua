@@ -35,7 +35,7 @@ local head_bobbing = require('scripts.omw.camera.head_bobbing')
 local third_person = require('scripts.omw.camera.third_person')
 local pov_auto_switch = require('scripts.omw.camera.first_person_auto_switch')
 local move360 = require('scripts.omw.camera.move360')
-local acceleration = require('scripts.omw.camera.acceleration')
+local curve = require('scripts.omw.camera.curve')
 
 local MODE = camera.MODE
 
@@ -238,7 +238,7 @@ local function onFrame(dt)
             math.min(camera.getThirdPersonDistance() + maxIncrease, third_person.preferredDistance))
     end
     move360.onFrame(dt)
-    acceleration.onFrame(dt)
+    curve.onFrame(dt)
 end
 
 return {
