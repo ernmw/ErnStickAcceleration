@@ -82,8 +82,8 @@ I.Settings.registerGroup({
     settings = {
         boolSetting('curve_', 'enabled', false),
         floatSetting('curve_', 'innerDeadzone', 0.05, 0, 1),
-        floatSetting('curve_', 'cubicWeight', 0.5, 0, 1),
-        floatSetting('curve_', 'sensitivity', 2.2, 0, 5),
+        floatSetting('curve_', 'cubicWeight', 0.6, 0, 1),
+        floatSetting('curve_', 'sensitivity', 0.25, 0, 5),
     },
 })
 
@@ -110,7 +110,7 @@ local function updateHeadBobbingDisabled()
 end
 
 local function updateCurveDisabled()
-    local disabled = not curve:get('enabled')
+    local disabled = (not curve:get('enabled'))
     I.Settings.updateRendererArgument(curveGroup, 'innerDeadzone', { disabled = disabled })
     I.Settings.updateRendererArgument(curveGroup, 'cubicWeight', { disabled = disabled })
     I.Settings.updateRendererArgument(curveGroup, 'sensitivity', { disabled = disabled })

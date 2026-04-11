@@ -14,8 +14,8 @@ local settings = storage.playerSection('SettingsOMWCameraCurve')
 local M        = {
     enabled       = true,
     innerDeadzone = 0.05,
-    cubicWeight   = 0.9,
-    sensitivity   = 1.4,
+    cubicWeight   = 0.6,
+    sensitivity   = 0.25,
 }
 
 local function updateSettings()
@@ -39,12 +39,14 @@ function M.onFrame(dt)
         self.controls.pitchChange * self.controls.pitchChange)
     local normalizedDistanceFromOrigin = math.sqrt(yawInput * yawInput + pitchInput * pitchInput)
 
-    if actualControlsDistanceFromOrigin > normalizedDistanceFromOrigin then
-        -- Player is using the mouse to move the camera.
-        return
-    end
-
+    -- If the stick isn't moving very much...
     if normalizedDistanceFromOrigin < M.innerDeadzone then
+        -- If the Look input IS moving...
+        if actualControlsDistanceFromOrigin > normalizedDistanceFromOrigin then
+            -- Don't mess with the input. The player is probably using the mouse.
+            return
+        end
+        -- Zero out the Look input.
         self.controls.yawChange = 0
         self.controls.pitchChange = 0
         return
@@ -58,8 +60,8 @@ function M.onFrame(dt)
     )
 
     -- normalize each input, then scale by new length
-    self.controls.yawChange = (self.controls.yawChange / normalizedDistanceFromOrigin) * newInputLength
-    self.controls.pitchChange = (self.controls.pitchChange / normalizedDistanceFromOrigin) * newInputLength
+    self.controls.yawChange = (yawInput / normalizedDistanceFromOrigin) * newInputLength
+    self.controls.pitchChange = (pitchInput / normalizedDistanceFromOrigin) * newInputLength
 end
 
 return M
